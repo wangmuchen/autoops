@@ -14,16 +14,24 @@ def ssh_exec(command,host_list=[]):
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
         client.connect(hostname,port,username,password)
+    except paramiko.ssh_exception.AuthenticationException:
+        return "认证失败",2
+    except paramiko.ssh_exception.NoValidConnectionsError:
+        return "不能使用ssh连接到主机%s的%s端口"%(hostname,port),2
+    except TimeoutError:
+        return "连接超时",2
     except paramiko.ssh_exception.SSHException:
-        return "目标主机断开会话",2
-    stdin, stdout, stderr = client.exec_command(command)
-    out = stdout.read().decode('utf-8')
-    err = stderr.read().decode('utf-8')
-    time.sleep(0.001)
-    client.close()
-    if out != '':
-        return out.strip('\n'),0
-    elif err != '':
-        return err.strip('\n'),1
+        return "连接被服务器主动关闭",2
+    else:
+        stdin, stdout, stderr = client.exec_command(command)
+        out_ok=stdout.read().decode('utf-8')
+        out_er=stderr.read().decode('utf-8')
+        time.sleep(0.001)
+        client.close()
+        if out_ok != '':
+            return out_ok.rstrip('\n'),0
+        else:
+            return out_er.rstrip('\n'),1
+
 def sftp_put():
     return
