@@ -1,4 +1,6 @@
 /.vscode/
 /.venv/
 /__pycache__/
+/*.build/
+/*.dist/
 info_host.xlsx
